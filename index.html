@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8">
-  <title></title>
+  <title>Skill Atom Authoring Tool</title>
   <meta name="description" content="">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -23,19 +23,46 @@
 </head>
 
 <body>
+  <div class="sidebar">
+    <div id="save-load">
+      <button id="save" type="button">Save</button>
+      <button id="load" type="button">Load</button>
+    </div>
+    <button id="new-atom" type="button">New Skill Atom</button>
+    <button id="new-base" type="button">New Base Knowledge</button>
+    <button id="load-ceptre" type="button">Load Ceptre Rules</button>
+    <button id="load-sprites" type="button">Load Sprite Sheet</button>
+  </div>
 
-  <!-- Add your site or application content here -->
-  <p>Hello world! This is HTML5 Boilerplate.</p>
+  <div id="new-atom-modal" class="modal-bg">
+    <div class="modal">
+      <label for="action">Action:</label>
+      <input id="action" type="text"> <br>
+      <label for="simulation">Simulation:</label>
+      <input id="simulation" type="text"> <br>
+      <label for="feedback">Feedback:</label>
+      <input id="feedback" type="text"> <br>
+      <label for="update">Update:</label>
+      <input id="update" type="text"> <br>
+      <button id="create-atom" class="create" type="button">Create</button>
+      <button id="cancel-atom" class="cancel" type="button">Cancel</button>
+    </div>
+  </div>
+
+  <div id="new-base-modal" class="modal-bg">
+    <div class="modal">
+      <label for="knowledge">Knowledge:</label>
+      <input id="knowledge" type="text"> <br>
+      <button id="create-base" class="create" type="button">Create</button>
+      <button id="cancel-base" class="cancel" type="button">Cancel</button>
+    </div>
+  </div>
+
   <script src="js/vendor/modernizr-3.11.2.min.js"></script>
+  <script src="js/vendor/jquery-3.6.0.js"></script>
   <script src="js/plugins.js"></script>
   <script src="js/main.js"></script>
 
-  <!-- Google Analytics: change UA-XXXXX-Y to be your site's ID. -->
-  <script>
-    window.ga = function () { ga.q.push(arguments) }; ga.q = []; ga.l = +new Date;
-    ga('create', 'UA-XXXXX-Y', 'auto'); ga('set', 'anonymizeIp', true); ga('set', 'transport', 'beacon'); ga('send', 'pageview')
-  </script>
-  <script src="https://www.google-analytics.com/analytics.js" async></script>
 </body>
 
 </html>
