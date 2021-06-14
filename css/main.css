@@ -116,6 +116,11 @@ textarea {
   display: inline;
 }
 
+.main {
+  position: absolute;
+  left: 20%;
+}
+
 .modal-bg {
   display: none;
   position: fixed;
