@@ -89,13 +89,13 @@ textarea {
 
 .sidebar {
   position: fixed;
+  overflow: hidden;
   top: 0;
   left: 0;
   z-index: 1;
   height: 100%;
   width: 20%;
   padding-top: 20px;
-  overflow-x: hidden;
   border-right: solid black;
 }
 
@@ -116,9 +116,34 @@ textarea {
   display: inline;
 }
 
-.main {
-  position: absolute;
+.sidebar-header {
+  overflow: hidden;
+  border-bottom: solid black;
+}
+
+.sidebar-content {
+  overflow: auto;
+  display: grid;
+  padding-left: 5%;
+  padding-top: 5%;
+  padding-right: 0;
+  grid-gap: 5%;
+  grid-template-columns: 45% 45%;
+  grid-auto-flow: row;
+}
+
+#atoms img {
+  width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+}
+
+canvas {
+  position: relative;
   left: 20%;
+  width: auto;
+  height: auto;
+  overflow: hidden;
 }
 
 .modal-bg {
