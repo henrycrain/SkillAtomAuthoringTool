@@ -122,12 +122,13 @@ textarea {
 }
 
 .sidebar-content {
+  height: auto;
   overflow: auto;
   display: grid;
   padding-left: 5%;
   padding-top: 5%;
   padding-right: 0;
-  grid-gap: 5%;
+  grid-gap: 6px;
   grid-template-columns: 45% 45%;
   grid-auto-flow: row;
 }

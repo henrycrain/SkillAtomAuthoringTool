@@ -8,9 +8,30 @@ $('#new-base').click(function () {
   $('#new-base-modal').css('display', 'block');
 });
 
-$('.create').click(function () {
+function newAtom() {
+  let img = new Image();
+  img.src = "tile.png";  // Placeholder
+  img.onload = function () {
+    $('#atoms').append(img);
+    img.ondragstart(dragAtom);
+  };
+
   $(this).parents('.modal-bg').css('display', 'none');
-});
+}
+
+function newBase() {
+  let img = new Image();
+  img.src = "tile.png";  // Placeholder
+  img.onload = function () {
+    $('#atoms').append(img);
+    img.ondragstart(dragAtom);
+  };
+
+  $(this).parents('.modal-bg').css('display', 'none');
+}
+
+$('#create-atom').click(newAtom);
+$('#create-base').click(newBase);
 
 $('.cancel').click(function () {
   $(this).parents('.modal-bg').css('display', 'none');
