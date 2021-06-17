@@ -49,7 +49,8 @@ let ctx = canvas.getContext('2d');
 let canvasOffset = $canvas.offset();
 let lastX;
 let lastY;
-let dragging;
+let dragging = null;
+let highlighted = null;
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -58,6 +59,31 @@ function draw() {
   // Objects have a uniform depth, so we can use the painter's algorithm
   for (let img of atomsOnCanvas) {
     ctx.drawImage(img.obj, img.left, img.top);
+
+    if (img === highlighted) {
+      let midX = (highlighted.left + highlighted.right) / 2;
+      let midY = (highlighted.top + highlighted.bottom) / 2;
+
+      ctx.beginPath();
+      ctx.arc(midX, highlighted.top, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = 'blue';
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(highlighted.right, midY, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = 'blue';
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(midX, highlighted.bottom, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = 'blue';
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(highlighted.left, midY, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = 'blue';
+      ctx.fill();
+    }
   }
 }
 
@@ -108,6 +134,7 @@ $canvas.on('drop', addAtom);
 function startDrag($event) {
   $event.preventDefault();
   $event.stopPropagation();
+  highlighted = null;
 
   let mouseX = $event.clientX - canvasOffset.left;
   let mouseY = $event.clientY - canvasOffset.top;
@@ -127,41 +154,67 @@ function startDrag($event) {
 }
 
 function drag($event) {
-  if (dragging) {
-    $event.preventDefault();
-    $event.stopPropagation();
+  $event.preventDefault();
+  $event.stopPropagation();
 
-    let mouseX = $event.clientX - canvasOffset.left;
-    let mouseY = $event.clientY - canvasOffset.top;
-    let movementX = mouseX - lastX;
-    let movementY = mouseY - lastY;
+  let mouseX = $event.clientX - canvasOffset.left;
+  let mouseY = $event.clientY - canvasOffset.top;
+  let movementX = mouseX - lastX;
+  let movementY = mouseY - lastY;
 
-    dragging.left += movementX;
-    dragging.right += movementX;
-    dragging.top += movementY;
-    dragging.bottom += movementY;
+  dragging.left += movementX;
+  dragging.right += movementX;
+  dragging.top += movementY;
+  dragging.bottom += movementY;
 
-    lastX = mouseX;
-    lastY = mouseY;
+  lastX = mouseX;
+  lastY = mouseY;
+}
 
-    draw();
+function handleHighlight($event) {
+  let mouseX = $event.clientX - canvasOffset.left;
+  let mouseY = $event.clientY - canvasOffset.top;
+
+  // Highlight top object
+  highlighted = null;
+  for (let i = atomsOnCanvas.length - 1; i >= 0; i--) {
+    let img = atomsOnCanvas[i];
+    if (mouseX >= img.left && mouseX <= img.right &&
+      mouseY >= img.top && mouseY <= img.bottom) {
+      highlighted = img;
+      break;
+    }
   }
+}
+
+function mouseOverCanvas($event) {
+  if (dragging) {
+    drag($event);
+  } else {
+    handleHighlight($event);
+  }
+  draw();
 }
 
 function stopDrag($event) {
   $event.preventDefault();
   $event.stopPropagation();
   dragging = null;
+  handleHighlight($event);
 }
 
 $canvas.mousedown(startDrag);
-$canvas.mousemove(drag);
-$canvas.mouseenter(function (event) {
-  if (event.buttons === 1) {
-    drag(event);
+$canvas.mousemove(mouseOverCanvas);
+$canvas.mouseenter(function ($event) {
+  if ($event.buttons === 1) {
+    mouseOverCanvas($event);
   } else {
-    stopDrag(event);
+    stopDrag($event);
   }
+});
+$canvas.mouseleave(function () {
+  highlighted = null;
+  draw();
 });
 $canvas.mouseup(stopDrag);
 
