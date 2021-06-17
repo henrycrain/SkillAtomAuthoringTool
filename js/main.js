@@ -37,8 +37,8 @@ $('.cancel').click(function () {
   $(this).parents('.modal-bg').css('display', 'none');
 });
 
-let canvasJq = $('.main');  // jQuery wrapper for canvas
-let canvas = canvasJq[0];  // The actual canvas
+let $canvas = $('.main-canvas');  // jQuery wrapper for canvas
+let canvas = $canvas[0];  // The actual canvas
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
@@ -46,7 +46,7 @@ let atomsOnCanvas = [];
 
 let ctx = canvas.getContext('2d');
 
-let canvasOffset = canvasJq.offset();
+let canvasOffset = $canvas.offset();
 let lastX;
 let lastY;
 let dragging;
@@ -65,19 +65,19 @@ function dragAtom(event) {
   // Proportional offsets because atoms are bigger on the canvas than in the list
   let offset = { left: offsetX / event.target.width, top: offsetY / event.target.height };
   let offsetStr = JSON.stringify(offset);
-  if (event.dataTransfer) {
+  if (event.dataTransfer) {  // If this is an actual event object
     event.dataTransfer.setData('text/uri-list', event.target.src);
     event.dataTransfer.setData('application/json', offsetStr);
-  } else {
+  } else {  // Otherwise, this is a jQuery wrapper
     event.originalEvent.dataTransfer.setData('text/uri-list', event.target.src);
     event.originalEvent.dataTransfer.setData('application/json', offsetStr);
   }
 }
 
-function addAtom(event) {
-  event.preventDefault();
-  let src = event.originalEvent.dataTransfer.getData('text/uri-list');
-  let offsetStr = event.originalEvent.dataTransfer.getData('application/json');
+function addAtom($event) {
+  $event.preventDefault();
+  let src = $event.originalEvent.dataTransfer.getData('text/uri-list');
+  let offsetStr = $event.originalEvent.dataTransfer.getData('application/json');
   let offset = JSON.parse(offsetStr);
 
   let newAtom = {
@@ -90,8 +90,8 @@ function addAtom(event) {
   newAtom.obj.onload = function () {
     newAtom.width = newAtom.obj.width;
     newAtom.height = newAtom.obj.height;
-    newAtom.left = event.clientX - canvasOffset.left - offset.left * newAtom.width;
-    newAtom.top = event.clientY - canvasOffset.top - offset.top * newAtom.height;
+    newAtom.left = $event.clientX - canvasOffset.left - offset.left * newAtom.width;
+    newAtom.top = $event.clientY - canvasOffset.top - offset.top * newAtom.height;
     newAtom.right = newAtom.left + newAtom.width;
     newAtom.bottom = newAtom.top + newAtom.height;
     draw();
@@ -100,17 +100,17 @@ function addAtom(event) {
 }
 
 $('#atoms').children().on('dragstart', dragAtom);
-canvasJq.on('dragover', event => event.preventDefault());
-canvasJq.on('drop', addAtom);
+$canvas.on('dragover', event => event.preventDefault());
+$canvas.on('drop', addAtom);
 
 // TODO Currently, dragging overlapping objects drags all of them, which might not be expected behavior
 // TODO To change this, I think we would need to assign z-indices to the images
-function startDrag(event) {
-  event.preventDefault();
-  event.stopPropagation();
+function startDrag($event) {
+  $event.preventDefault();
+  $event.stopPropagation();
 
-  let mouseX = event.clientX - canvasOffset.left;
-  let mouseY = event.clientY - canvasOffset.top;
+  let mouseX = $event.clientX - canvasOffset.left;
+  let mouseY = $event.clientY - canvasOffset.top;
 
   dragging = false;
   for (let img of atomsOnCanvas) {
@@ -125,13 +125,13 @@ function startDrag(event) {
   lastY = mouseY;
 }
 
-function drag(event) {
+function drag($event) {
   if (dragging) {
-    event.preventDefault();
-    event.stopPropagation();
+    $event.preventDefault();
+    $event.stopPropagation();
 
-    let mouseX = event.clientX - canvasOffset.left;
-    let mouseY = event.clientY - canvasOffset.top;
+    let mouseX = $event.clientX - canvasOffset.left;
+    let mouseY = $event.clientY - canvasOffset.top;
     let movementX = mouseX - lastX;
     let movementY = mouseY - lastY;
 
@@ -151,9 +151,9 @@ function drag(event) {
   }
 }
 
-function stopDrag(event) {
-  event.preventDefault();
-  event.stopPropagation();
+function stopDrag($event) {
+  $event.preventDefault();
+  $event.stopPropagation();
 
   dragging = false;
   for (let img of atomsOnCanvas) {
@@ -161,13 +161,45 @@ function stopDrag(event) {
   }
 }
 
-canvasJq.mousedown(startDrag);
-canvasJq.mousemove(drag);
-canvasJq.mouseenter(function (event) {
+$canvas.mousedown(startDrag);
+$canvas.mousemove(drag);
+$canvas.mouseenter(function (event) {
   if (event.buttons === 1) {
     drag(event);
   } else {
     stopDrag(event);
   }
 });
-canvasJq.mouseup(stopDrag);
+$canvas.mouseup(stopDrag);
+
+$.contextMenu({
+  selector: '.main-canvas',
+  build: function (element, $event) {
+    let mouseX = $event.clientX - canvasOffset.left;
+    let mouseY = $event.clientY - canvasOffset.top;
+
+    let toDelete = [];
+    for (let img of atomsOnCanvas) {
+      if (mouseX >= img.left && mouseX <= img.right &&
+        mouseY >= img.top && mouseY <= img.bottom) {
+        toDelete.push(img);
+      }
+    }
+    let deleteDisabled = (toDelete.length === 0);
+
+    return {
+      items: {
+        'delete': {
+          name: 'Delete',
+          icon: 'delete',
+          disabled: deleteDisabled,
+          callback: function () {
+            atomsOnCanvas = atomsOnCanvas.filter(element => !toDelete.includes(element));
+            draw();
+          }  // end callback
+        }  // end delete
+      },  // end items
+      reposition: false
+    };  // end return
+  }  // end build
+});
