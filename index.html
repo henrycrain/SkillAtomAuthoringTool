@@ -24,14 +24,17 @@
 
 <body>
   <div class="sidebar">
-    <div id="save-load">
-      <button id="save" type="button">Save</button>
-      <button id="load" type="button">Load</button>
+    <div id="buttons" class="sidebar-header">
+      <div id="save-load">
+        <button id="save" type="button">Save</button>
+        <button id="load" type="button">Load</button>
+      </div>
+      <button id="new-atom" type="button">New Skill Atom</button>
+      <button id="new-base" type="button">New Base Knowledge</button>
+      <button id="load-ceptre" type="button">Load Ceptre Rules</button>
+      <button id="load-sprites" type="button">Load Sprite Sheet</button>
     </div>
-    <button id="new-atom" type="button">New Skill Atom</button>
-    <button id="new-base" type="button">New Base Knowledge</button>
-    <button id="load-ceptre" type="button">Load Ceptre Rules</button>
-    <button id="load-sprites" type="button">Load Sprite Sheet</button>
+    <div id="atoms" class="sidebar-content"></div>
   </div>
 
   <div id="new-atom-modal" class="modal-bg">
@@ -58,8 +61,13 @@
     </div>
   </div>
 
+  <canvas class="main-canvas"></canvas>
+
   <script src="js/vendor/modernizr-3.11.2.min.js"></script>
   <script src="js/vendor/jquery-3.6.0.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.7.1/jquery.contextMenu.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.7.1/jquery.contextMenu.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.7.1/jquery.ui.position.js"></script>
   <script src="js/plugins.js"></script>
   <script src="js/main.js"></script>
 
