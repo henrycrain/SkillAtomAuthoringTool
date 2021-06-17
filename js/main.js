@@ -13,7 +13,7 @@ function newAtom() {
   img.src = "tile.png";  // Placeholder
   img.onload = function () {
     $('#atoms').append(img);
-    img.ondragstart(dragAtom);
+    img.ondragstart = dragAtom;
   };
 
   $(this).parents('.modal-bg').css('display', 'none');
@@ -24,7 +24,7 @@ function newBase() {
   img.src = "tile.png";  // Placeholder
   img.onload = function () {
     $('#atoms').append(img);
-    img.ondragstart(dragAtom);
+    img.ondragstart = dragAtom;
   };
 
   $(this).parents('.modal-bg').css('display', 'none');
@@ -65,8 +65,13 @@ function dragAtom(event) {
   // Proportional offsets because atoms are bigger on the canvas than in the list
   let offset = { left: offsetX / event.target.width, top: offsetY / event.target.height };
   let offsetStr = JSON.stringify(offset);
-  event.originalEvent.dataTransfer.setData('text/uri-list', event.target.src);
-  event.originalEvent.dataTransfer.setData('application/json', offsetStr);
+  if (event.dataTransfer) {
+    event.dataTransfer.setData('text/uri-list', event.target.src);
+    event.dataTransfer.setData('application/json', offsetStr);
+  } else {
+    event.originalEvent.dataTransfer.setData('text/uri-list', event.target.src);
+    event.originalEvent.dataTransfer.setData('application/json', offsetStr);
+  }
 }
 
 function addAtom(event) {
