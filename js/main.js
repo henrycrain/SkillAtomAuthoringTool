@@ -49,12 +49,41 @@ let ctx = canvas.getContext('2d');
 let canvasOffset = $canvas.offset();
 let lastX;
 let lastY;
-let dragging;
+let dragging = null;
+let highlighted = null;
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // The last placed object is on top
+  // Since the user probably doesn't want objects to overlap anyway, I don't think its necessary to be able to reorder them
+  // Objects have a uniform depth, so we can use the painter's algorithm
   for (let img of atomsOnCanvas) {
     ctx.drawImage(img.obj, img.left, img.top);
+
+    if (img === highlighted) {
+      let midX = (highlighted.left + highlighted.right) / 2;
+      let midY = (highlighted.top + highlighted.bottom) / 2;
+
+      ctx.beginPath();
+      ctx.arc(midX, highlighted.top, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = 'blue';
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(highlighted.right, midY, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = 'blue';
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(midX, highlighted.bottom, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = 'blue';
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(highlighted.left, midY, 5, 0, 2 * Math.PI);
+      ctx.fillStyle = 'blue';
+      ctx.fill();
+    }
   }
 }
 
@@ -82,8 +111,7 @@ function addAtom($event) {
 
   let newAtom = {
     obj: new Image(),  // The actual image object
-    src: src,
-    isDragging: false
+    src: src
   };
 
   newAtom.obj.src = newAtom.src;
@@ -103,21 +131,21 @@ $('#atoms').children().on('dragstart', dragAtom);
 $canvas.on('dragover', event => event.preventDefault());
 $canvas.on('drop', addAtom);
 
-// TODO Currently, dragging overlapping objects drags all of them, which might not be expected behavior
-// TODO To change this, I think we would need to assign z-indices to the images
 function startDrag($event) {
   $event.preventDefault();
   $event.stopPropagation();
+  highlighted = null;
 
   let mouseX = $event.clientX - canvasOffset.left;
   let mouseY = $event.clientY - canvasOffset.top;
 
-  dragging = false;
-  for (let img of atomsOnCanvas) {
+  // Only drag the top object
+  for (let i = atomsOnCanvas.length - 1; i >= 0; i--) {
+    let img = atomsOnCanvas[i];
     if (mouseX >= img.left && mouseX <= img.right &&
-        mouseY >= img.top && mouseY <= img.bottom) {
-      dragging = true;
-      img.isDragging = true;
+      mouseY >= img.top && mouseY <= img.bottom) {
+      dragging = img;
+      break;
     }
   }
 
@@ -126,49 +154,67 @@ function startDrag($event) {
 }
 
 function drag($event) {
-  if (dragging) {
-    $event.preventDefault();
-    $event.stopPropagation();
+  $event.preventDefault();
+  $event.stopPropagation();
 
-    let mouseX = $event.clientX - canvasOffset.left;
-    let mouseY = $event.clientY - canvasOffset.top;
-    let movementX = mouseX - lastX;
-    let movementY = mouseY - lastY;
+  let mouseX = $event.clientX - canvasOffset.left;
+  let mouseY = $event.clientY - canvasOffset.top;
+  let movementX = mouseX - lastX;
+  let movementY = mouseY - lastY;
 
-    for (let img of atomsOnCanvas) {
-      if (img.isDragging) {
-        img.left += movementX;
-        img.right += movementX;
-        img.top += movementY;
-        img.bottom += movementY;
-      }
+  dragging.left += movementX;
+  dragging.right += movementX;
+  dragging.top += movementY;
+  dragging.bottom += movementY;
+
+  lastX = mouseX;
+  lastY = mouseY;
+}
+
+function handleHighlight($event) {
+  let mouseX = $event.clientX - canvasOffset.left;
+  let mouseY = $event.clientY - canvasOffset.top;
+
+  // Highlight top object
+  highlighted = null;
+  for (let i = atomsOnCanvas.length - 1; i >= 0; i--) {
+    let img = atomsOnCanvas[i];
+    if (mouseX >= img.left && mouseX <= img.right &&
+      mouseY >= img.top && mouseY <= img.bottom) {
+      highlighted = img;
+      break;
     }
-
-    lastX = mouseX;
-    lastY = mouseY;
-
-    draw();
   }
+}
+
+function mouseOverCanvas($event) {
+  if (dragging) {
+    drag($event);
+  } else {
+    handleHighlight($event);
+  }
+  draw();
 }
 
 function stopDrag($event) {
   $event.preventDefault();
   $event.stopPropagation();
-
-  dragging = false;
-  for (let img of atomsOnCanvas) {
-    img.isDragging = false;
-  }
+  dragging = null;
+  handleHighlight($event);
 }
 
 $canvas.mousedown(startDrag);
-$canvas.mousemove(drag);
-$canvas.mouseenter(function (event) {
-  if (event.buttons === 1) {
-    drag(event);
+$canvas.mousemove(mouseOverCanvas);
+$canvas.mouseenter(function ($event) {
+  if ($event.buttons === 1) {
+    mouseOverCanvas($event);
   } else {
-    stopDrag(event);
+    stopDrag($event);
   }
+});
+$canvas.mouseleave(function () {
+  highlighted = null;
+  draw();
 });
 $canvas.mouseup(stopDrag);
 
@@ -178,23 +224,24 @@ $.contextMenu({
     let mouseX = $event.clientX - canvasOffset.left;
     let mouseY = $event.clientY - canvasOffset.top;
 
-    let toDelete = [];
-    for (let img of atomsOnCanvas) {
+    let toDelete = null;
+    for (let i = atomsOnCanvas.length - 1; i >= 0; i--) {
+      let img = atomsOnCanvas[i];
       if (mouseX >= img.left && mouseX <= img.right &&
-        mouseY >= img.top && mouseY <= img.bottom) {
-        toDelete.push(img);
+          mouseY >= img.top && mouseY <= img.bottom) {
+        toDelete = img;
+        break;
       }
     }
-    let deleteDisabled = (toDelete.length === 0);
 
     return {
       items: {
         'delete': {
           name: 'Delete',
           icon: 'delete',
-          disabled: deleteDisabled,
+          disabled: (toDelete === null),
           callback: function () {
-            atomsOnCanvas = atomsOnCanvas.filter(element => !toDelete.includes(element));
+            atomsOnCanvas = atomsOnCanvas.filter(element => element !== toDelete);
             draw();
           }  // end callback
         }  // end delete
