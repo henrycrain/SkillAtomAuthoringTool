@@ -21,7 +21,6 @@ function dragAtomFromMenu(event) {  // Note that this is a vanilla event object
 
   let xferObj = { atom: atom, offset: offset };
   let xferStr = JSON.stringify(xferObj);
-  console.log(xferStr);
   if (event.dataTransfer) {  // If this is an actual event object
     event.dataTransfer.setData('application/json', xferStr);
     // Image object doesn't transfer in JSON, so we have to transfer the ID
@@ -98,7 +97,7 @@ function draw() {
     let img = atom.image;
     ctx.drawImage(img, atom.left, atom.top, atom.image.naturalWidth, atom.image.naturalHeight);
 
-    if (img === highlighted) {
+    if (atom === highlighted) {
       let midX = (highlighted.left + highlighted.right) / 2;
       let midY = (highlighted.top + highlighted.bottom) / 2;
 
@@ -187,11 +186,13 @@ function dragOnCanvas($event) {
 
   lastX = mouseX;
   lastY = mouseY;
+  draw();
 }
 
 function handleHighlight($event) {
   let mouseX = $event.clientX - canvasOffset.left;
   let mouseY = $event.clientY - canvasOffset.top;
+  let oldHighlight = highlighted;
 
   // Highlight top object
   highlighted = null;
@@ -203,6 +204,10 @@ function handleHighlight($event) {
       break;
     }
   }
+
+  if (highlighted !== oldHighlight) {
+    draw();
+  }
 }
 
 function mouseOverCanvas($event) {
@@ -211,7 +216,6 @@ function mouseOverCanvas($event) {
   } else {
     handleHighlight($event);
   }
-  draw();
 }
 
 function stopDragOnCanvas($event) {
