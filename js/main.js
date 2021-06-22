@@ -28,6 +28,16 @@ function dragAtomFromMenu(event) {  // Note that this is a vanilla event object
   }
 }
 
+function addToMenu(atom) {
+  skillAtomsInMenu.push(atom);
+  $('#menu').append(atom.image);
+}
+
+function removeFromMenu(atom) {
+  skillAtomsInMenu = skillAtomsInMenu.filter(element => element !== atom);
+  $(`#${atom.image.id}`).remove();
+}
+
 function newAtom() {
   let name = $('#atom-name').val();
   let action = $('#action').val();
@@ -35,15 +45,14 @@ function newAtom() {
   let feedback = $('#feedback').val();
   let update = $('#update').val();
   let newSkillAtom = new SkillAtom(name, action, simulation, feedback, update);
-  skillAtomsInMenu.push(newSkillAtom);
 
   newSkillAtom.image = new Image();
   newSkillAtom.image.src = "tile.png";  // Placeholder
+  newSkillAtom.image.id = newSkillAtom.skillName;
   newSkillAtom.image.onload = function () {
-    $('#menu').append(newSkillAtom.image);
+    addToMenu(newSkillAtom);
     newSkillAtom.image.ondragstart = dragAtomFromMenu;
   };
-  newSkillAtom.image.id = newSkillAtom.skillName;
 
   $(this).parents('.modal-bg').css('display', 'none');
 }
@@ -53,15 +62,14 @@ function newBase() {
   let source = $('#source').val();
   let knowledge = $('#knowledge').val();
   let newPriorKnowledge = new PriorKnowledge(name, source, knowledge);
-  skillAtomsInMenu.push(newPriorKnowledge);
 
   newPriorKnowledge.image = new Image();
   newPriorKnowledge.image.src = "tile.png";  // Placeholder
+  newPriorKnowledge.image.id = newPriorKnowledge.skillName;
   newPriorKnowledge.image.onload = function () {
-    $('#menu').append(newPriorKnowledge.image);
+    addToMenu(newPriorKnowledge);
     newPriorKnowledge.image.ondragstart = dragAtomFromMenu;
   };
-  newPriorKnowledge.image.id = newPriorKnowledge.skillName;
 
   $(this).parents('.modal-bg').css('display', 'none');
 }
@@ -124,7 +132,17 @@ function draw() {
   }
 }
 
-function addAtomToCanvas($event) {
+function addToCanvas(atom) {
+  skillAtomsOnCanvas.push(atom);
+  draw();
+}
+
+function removeFromCanvas(atom) {
+  skillAtomsOnCanvas = skillAtomsOnCanvas.filter(element => element !== atom);
+  draw();
+}
+
+function dropAtomOnCanvas($event) {
   $event.preventDefault();
   let xferStr = $event.originalEvent.dataTransfer.getData('application/json');
   let xferObj = JSON.parse(xferStr);
@@ -132,9 +150,7 @@ function addAtomToCanvas($event) {
   let offset = xferObj.offset;
   let imgId = $event.originalEvent.dataTransfer.getData('text');
   atom.image = document.getElementById(imgId);
-
-  skillAtomsInMenu = skillAtomsInMenu.filter(element => element !== atom);
-  $('#menu#child').remove();
+  removeFromMenu(atom);
 
   // We store coordinates on the atom object, not the image object
   // This is a little odd, but makes things easier
@@ -142,11 +158,11 @@ function addAtomToCanvas($event) {
   atom.top = $event.clientY - canvasOffset.top - offset.top * atom.image.naturalHeight;
   atom.right = atom.left + atom.image.naturalWidth;
   atom.bottom = atom.top + atom.image.naturalHeight;
-  skillAtomsOnCanvas.push(atom);
+  addToCanvas(atom);
 }
 
 $canvas.on('dragover', event => event.preventDefault());
-$canvas.on('drop', addAtomToCanvas);
+$canvas.on('drop', dropAtomOnCanvas);
 
 function startDragOnCanvas($event) {
   $event.preventDefault();
@@ -259,14 +275,12 @@ $.contextMenu({
     return {
       items: {
         'delete': {
-          name: 'Delete',
+          name: 'Remove',
           icon: 'delete',
           disabled: (toDelete === null),
           callback: function () {
-            skillAtomsOnCanvas = skillAtomsOnCanvas.filter(element => element !== toDelete);
-            draw();
-            skillAtomsInMenu.push(toDelete);  // TODO this should be one operation
-            $('#menu').append(toDelete.image);
+            removeFromCanvas(toDelete);
+            addToMenu(toDelete);
           }  // end callback
         }  // end delete
       },  // end items
