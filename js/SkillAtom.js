@@ -1,4 +1,4 @@
-function skillAtom(skillName, playerInput, stateChange, feedback, knowledgeGrowth) {
+function SkillAtom(skillName, playerInput, stateChange, feedback, knowledgeGrowth) {
   this.skillName = skillName;
   this.playerInput = playerInput;
   this.stateChange = stateChange;
