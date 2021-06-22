@@ -75,11 +75,13 @@ function draw() {
 
 $('#new-atom').click(function () {
   $('#new-atom-modal').css('display', 'block');
-  $('#atom-error').textContent = "";
+  $('.modal input').val('');
+  $('#atom-error').text("");
 });
 
 $('#new-base').click(function () {
   $('#new-base-modal').css('display', 'block');
+  $('.modal input').val('');
   $('#base-error').text("");
 });
 
