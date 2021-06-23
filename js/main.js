@@ -1,7 +1,7 @@
 "use strict";
 
 let $canvas = $('.main-canvas');  // jQuery wrapper for canvas
-let canvas = $canvas[0];  // The actual canvas
+let canvas = $canvas.get(0);  // The actual canvas
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
@@ -116,8 +116,15 @@ function newAtom() {
 
   let newSkillAtom = new SkillAtom(name, action, simulation, feedback, update);
 
+  let textCanvas = $('#text-canvas').get(0);
+  let textCtx = textCanvas.getContext('2d');
+  textCtx.font = '25px sans-serif';
+  textCanvas.width = textCtx.measureText(name).width;
+  textCtx.fillText(name, 0, 25);
+
   newSkillAtom.image = new Image();
-  newSkillAtom.image.src = "tile.png";  // Placeholder
+  // newSkillAtom.image.src = 'tile.png';
+  newSkillAtom.image.src = textCanvas.toDataURL();
   newSkillAtom.image.id = newSkillAtom.skillName;
   newSkillAtom.image.onload = function () {
     addToMenu(newSkillAtom);
@@ -139,8 +146,15 @@ function newBase() {
 
   let newPriorKnowledge = new PriorKnowledge(name, source, knowledge);
 
+  let textCanvas = $('#text-canvas').get(0);
+  let textCtx = textCanvas.getContext('2d');
+  textCtx.font = '25px sans-serif';
+  textCanvas.width = textCtx.measureText(name).width;
+  textCtx.fillText(name, 0, 25);
+
   newPriorKnowledge.image = new Image();
-  newPriorKnowledge.image.src = "tile.png";  // Placeholder
+  // newPriorKnowledge.image.src = 'tile.png';
+  newPriorKnowledge.image.src = textCanvas.toDataURL();
   newPriorKnowledge.image.id = newPriorKnowledge.skillName;
   newPriorKnowledge.image.onload = function () {
     addToMenu(newPriorKnowledge);
