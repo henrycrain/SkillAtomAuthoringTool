@@ -167,6 +167,14 @@ function newBase() {
   textCtx.font = '25px sans-serif';
   textCanvas.width = textCtx.measureText(name).width;
   textCtx.fillText(name, 0, 25);
+  if (textCanvas.width < textCtx.measureText(source).width) {
+    textCanvas.width = textCtx.measureText(source).width;
+  }
+  textCtx.fillText(source, 0, 45);
+  if (textCanvas.width < textCtx.measureText(knowledge).width) {
+    textCanvas.width = textCtx.measureText(knowledge).width;
+  }
+  textCtx.fillText(knowledge, 0, 65);
 
   newPriorKnowledge.image = new Image();
   // newPriorKnowledge.image.src = 'tile.png';
