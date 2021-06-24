@@ -121,6 +121,22 @@ function newAtom() {
   textCtx.font = '25px sans-serif';
   textCanvas.width = textCtx.measureText(name).width;
   textCtx.fillText(name, 0, 25);
+  if (textCanvas.width < textCtx.measureText(action).width) {
+    textCanvas.width = textCtx.measureText(action).width;
+  }
+  textCtx.fillText(action, 0, 45);
+  if (textCanvas.width < textCtx.measureText(simulation).width) {
+    textCanvas.width = textCtx.measureText(simulation).width;
+  }
+  textCtx.fillText(simulation, 0, 65);
+  if (textCanvas.width < textCtx.measureText(feedback).width) {
+    textCanvas.width = textCtx.measureText(feedback).width;
+  }
+  textCtx.fillText(feedback, 0, 85);
+  if (textCanvas.width < textCtx.measureText(update).width) {
+    textCanvas.width = textCtx.measureText(update).width;
+  }
+  textCtx.fillText(update, 0, 105);
 
   newSkillAtom.image = new Image();
   // newSkillAtom.image.src = 'tile.png';
