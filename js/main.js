@@ -118,24 +118,14 @@ function newAtom() {
 
   let textCanvas = $('#text-canvas').get(0);
   let textCtx = textCanvas.getContext('2d');
-  textCtx.font = '25px sans-serif';
-  textCanvas.width = textCtx.measureText(name).width;
+  textCtx.font = '25px sans-serif';  // Set the font here so the width will be right
+  textCanvas.width = Math.max(...[name, action, simulation, feedback, update].map(text => textCtx.measureText(text).width));
+  textCanvas.height = 110
+  textCtx.font = '25px sans-serif';  // Have to set it again because we changed the width and height
   textCtx.fillText(name, 0, 25);
-  if (textCanvas.width < textCtx.measureText(action).width) {
-    textCanvas.width = textCtx.measureText(action).width;
-  }
   textCtx.fillText(action, 0, 45);
-  if (textCanvas.width < textCtx.measureText(simulation).width) {
-    textCanvas.width = textCtx.measureText(simulation).width;
-  }
   textCtx.fillText(simulation, 0, 65);
-  if (textCanvas.width < textCtx.measureText(feedback).width) {
-    textCanvas.width = textCtx.measureText(feedback).width;
-  }
   textCtx.fillText(feedback, 0, 85);
-  if (textCanvas.width < textCtx.measureText(update).width) {
-    textCanvas.width = textCtx.measureText(update).width;
-  }
   textCtx.fillText(update, 0, 105);
 
   newSkillAtom.image = new Image();
