@@ -120,7 +120,7 @@ function newAtom() {
   let textCtx = textCanvas.getContext('2d');
   textCtx.font = '25px sans-serif';  // Set the font here so the width will be right
   textCanvas.width = Math.max(...[name, action, simulation, feedback, update].map(text => textCtx.measureText(text).width));
-  textCanvas.height = 110
+  textCanvas.height = 110;
   textCtx.font = '25px sans-serif';  // Have to set it again because we changed the width and height
   textCtx.fillText(name, 0, 25);
   textCtx.fillText(action, 0, 45);
@@ -129,7 +129,6 @@ function newAtom() {
   textCtx.fillText(update, 0, 105);
 
   newSkillAtom.image = new Image();
-  // newSkillAtom.image.src = 'tile.png';
   newSkillAtom.image.src = textCanvas.toDataURL();
   newSkillAtom.image.id = newSkillAtom.skillName;
   newSkillAtom.image.onload = function () {
@@ -154,20 +153,15 @@ function newBase() {
 
   let textCanvas = $('#text-canvas').get(0);
   let textCtx = textCanvas.getContext('2d');
-  textCtx.font = '25px sans-serif';
-  textCanvas.width = textCtx.measureText(name).width;
+  textCtx.font = '25px sans-serif';  // Set the font here so the width will be right
+  textCanvas.width = Math.max(...[name, source, knowledge].map(text => textCtx.measureText(text).width));
+  textCanvas.height = 110;
+  textCtx.font = '25px sans-serif';  // Have to set it again because we changed the width and height
   textCtx.fillText(name, 0, 25);
-  if (textCanvas.width < textCtx.measureText(source).width) {
-    textCanvas.width = textCtx.measureText(source).width;
-  }
   textCtx.fillText(source, 0, 45);
-  if (textCanvas.width < textCtx.measureText(knowledge).width) {
-    textCanvas.width = textCtx.measureText(knowledge).width;
-  }
   textCtx.fillText(knowledge, 0, 65);
 
   newPriorKnowledge.image = new Image();
-  // newPriorKnowledge.image.src = 'tile.png';
   newPriorKnowledge.image.src = textCanvas.toDataURL();
   newPriorKnowledge.image.id = newPriorKnowledge.skillName;
   newPriorKnowledge.image.onload = function () {
