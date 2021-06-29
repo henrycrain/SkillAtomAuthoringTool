@@ -10,12 +10,25 @@ let skillAtomsInMenu = [];
 let skillAtomsOnCanvas = [];
 
 let ctx = canvas.getContext('2d');
-
 let canvasOffset = $canvas.offset();
+
+let highlighted = null;
+const HIGHLIGHT_CIRCLE_RADIUS = 5;
+
+let dragging = null;
 let lastX;
 let lastY;
-let dragging = null;
-let highlighted = null;
+
+let draggingFrom = null;
+let dragPoint;
+const DragPointEnum = {
+  TOP: 0,
+  RIGHT: 1,
+  BOTTOM: 2,
+  LEFT: 3
+};
+let arrowX;
+let arrowY;
 
 function addToMenu(atom) {
   skillAtomsInMenu.push(atom);
@@ -35,6 +48,17 @@ function addToCanvas(atom) {
 function removeFromCanvas(atom) {
   skillAtomsOnCanvas = skillAtomsOnCanvas.filter(element => element !== atom);
   draw();
+}
+
+function getSkillAtomUnderCursor(x, y) {
+  for (let i = skillAtomsOnCanvas.length - 1; i >= 0; i--) {
+    let atom = skillAtomsOnCanvas[i];
+    if (x >= atom.left && x <= atom.right  &&
+      y >= atom.top  && y <= atom.bottom ) {
+      return atom;
+    }
+  }
+  return null;
 }
 
 function draw() {
@@ -71,6 +95,44 @@ function draw() {
       ctx.fill();
     }
   }
+
+  for (let atom of skillAtomsOnCanvas) {
+    for (let child of atom.children) {
+      ctx.beginPath();
+      ctx.moveTo((atom.left + atom.right) / 2, atom.bottom);
+      ctx.lineTo((child.left + child.right) / 2, child.top);
+      ctx.stroke();
+    }
+  }
+
+  if (draggingFrom) {
+    let startX = 0;
+    let startY = 0;
+    let midX = (draggingFrom.left + draggingFrom.right) / 2;
+    let midY = (draggingFrom.top + draggingFrom.bottom) / 2;
+    switch (dragPoint) {
+      case DragPointEnum.TOP:
+        startX = midX;
+        startY = draggingFrom.top;
+        break;
+      case DragPointEnum.RIGHT:
+        startX = draggingFrom.right;
+        startY = midY;
+        break;
+      case DragPointEnum.BOTTOM:
+        startX = midX;
+        startY = draggingFrom.bottom;
+        break;
+      case DragPointEnum.LEFT:
+        startX = draggingFrom.left;
+        startY = midY;
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(arrowX, arrowY);
+    ctx.stroke();
+  }
 }
 
 $('#new-atom').click(function () {
@@ -85,23 +147,8 @@ $('#new-base').click(function () {
   $('#base-error').text("");
 });
 
-function dragAtomFromMenu(event) {  // Note that this is a vanilla event object
-  let atom = skillAtomsInMenu.find(atom => atom.image === event.target);
-
-  let coords = event.target.getBoundingClientRect();
-  let offsetX = event.clientX - coords.x;
-  let offsetY = event.clientY - coords.y;
-  // Proportional offsets because atoms are bigger on the canvas than in the list
-  let offset = { left: offsetX / event.target.width, top: offsetY / event.target.height };
-
-  let xferObj = { atom: atom, offset: offset };
-  let xferStr = JSON.stringify(xferObj);
-  if (event.dataTransfer) {  // If this is an actual event object
-    event.dataTransfer.setData('application/json', xferStr);
-    // Image object doesn't transfer in JSON, so we have to transfer the ID
-    event.dataTransfer.setData('text', event.target.id);
-  }
-}
+$('#create-atom').click(newAtom);
+$('#create-base').click(newBase);
 
 function newAtom() {
   let name = $('#atom-name').val();
@@ -173,12 +220,31 @@ function newBase() {
   $(this).parents('.modal-bg').css('display', 'none');
 }
 
-$('#create-atom').click(newAtom);
-$('#create-base').click(newBase);
+function dragAtomFromMenu(event) {  // Note that this is a vanilla event object
+  let atom = skillAtomsInMenu.find(atom => atom.image === event.target);
+
+  let coords = event.target.getBoundingClientRect();
+  let offsetX = event.clientX - coords.x;
+  let offsetY = event.clientY - coords.y;
+  // Proportional offsets because atoms are bigger on the canvas than in the list
+  let offset = { left: offsetX / event.target.width, top: offsetY / event.target.height };
+
+  let xferObj = { atom: atom, offset: offset };
+  let xferStr = JSON.stringify(xferObj);
+  if (event.dataTransfer) {  // If this is an actual event object
+    event.dataTransfer.setData('application/json', xferStr);
+    // Image object doesn't transfer in JSON, so we have to transfer the ID
+    event.dataTransfer.setData('text', event.target.id);
+  }
+}
 
 $('.cancel').click(function () {
   $(this).parents('.modal-bg').css('display', 'none');
 });
+
+
+$canvas.on('dragover', event => event.preventDefault());
+$canvas.on('drop', dropAtomOnCanvas);
 
 function dropAtomOnCanvas($event) {
   $event.preventDefault();
@@ -199,100 +265,125 @@ function dropAtomOnCanvas($event) {
   addToCanvas(atom);
 }
 
-$canvas.on('dragover', event => event.preventDefault());
-$canvas.on('drop', dropAtomOnCanvas);
-
-function startDragOnCanvas($event) {
-  $event.preventDefault();
-  $event.stopPropagation();
-  highlighted = null;
-
-  let mouseX = $event.clientX - canvasOffset.left;
-  let mouseY = $event.clientY - canvasOffset.top;
-
-  // Only drag the top object
-  for (let i = skillAtomsOnCanvas.length - 1; i >= 0; i--) {
-    let atom = skillAtomsOnCanvas[i];
-    if (mouseX >= atom.left && mouseX <= atom.right &&
-        mouseY >= atom.top && mouseY <= atom.bottom) {
-      dragging = atom;
-      break;
-    }
-  }
-
-  lastX = mouseX;
-  lastY = mouseY;
-}
-
-function dragOnCanvas($event) {
-  $event.preventDefault();
-  $event.stopPropagation();
-
-  let mouseX = $event.clientX - canvasOffset.left;
-  let mouseY = $event.clientY - canvasOffset.top;
-  let movementX = mouseX - lastX;
-  let movementY = mouseY - lastY;
-
-  dragging.left += movementX;
-  dragging.right += movementX;
-  dragging.top += movementY;
-  dragging.bottom += movementY;
-
-  lastX = mouseX;
-  lastY = mouseY;
-  draw();
-}
-
-function handleHighlight($event) {
-  let mouseX = $event.clientX - canvasOffset.left;
-  let mouseY = $event.clientY - canvasOffset.top;
-  let oldHighlight = highlighted;
-
-  // Highlight top object
-  highlighted = null;
-  for (let i = skillAtomsOnCanvas.length - 1; i >= 0; i--) {
-    let atom = skillAtomsOnCanvas[i];
-    if (mouseX >= atom.left && mouseX <= atom.right &&
-        mouseY >= atom.top && mouseY <= atom.bottom) {
-      highlighted = atom;
-      break;
-    }
-  }
-
-  if (highlighted !== oldHighlight) {
-    draw();
-  }
-}
-
-function mouseOverCanvas($event) {
-  if (dragging) {
-    dragOnCanvas($event);
-  } else {
-    handleHighlight($event);
-  }
-}
-
-function stopDragOnCanvas($event) {
-  $event.preventDefault();
-  $event.stopPropagation();
-  dragging = null;
-  handleHighlight($event);
-}
-
-$canvas.mousedown(startDragOnCanvas);
+$canvas.mousedown(clickOnCanvas);
 $canvas.mousemove(mouseOverCanvas);
 $canvas.mouseenter(function ($event) {
   if ($event.buttons === 1) {
     mouseOverCanvas($event);
   } else {
-    stopDragOnCanvas($event);
+    mouseUpOnCanvas($event);
   }
 });
 $canvas.mouseleave(function () {
   highlighted = null;
   draw();
 });
-$canvas.mouseup(stopDragOnCanvas);
+$canvas.mouseup(mouseUpOnCanvas);
+
+function clickOnCanvas($event) {
+  $event.preventDefault();
+  $event.stopPropagation();
+  let mouseX = $event.clientX - canvasOffset.left;
+  let mouseY = $event.clientY - canvasOffset.top;
+
+  // The top object is already highlighted, so we don't need to check separately
+  if (highlighted) {
+    let highlightMidX = (highlighted.left + highlighted.right) / 2;
+    let highlightMidY = (highlighted.top + highlighted.bottom) / 2;
+
+    let distTop = Math.hypot(mouseX - highlightMidX, mouseY - highlighted.top);
+    let distRight = Math.hypot(mouseX - highlighted.right, mouseY - highlightMidY);
+    let distBottom = Math.hypot(mouseX - highlightMidX, mouseY - highlighted.bottom);
+    let distLeft = Math.hypot(mouseX - highlighted.left, mouseY - highlightMidY);
+
+    if (distTop < HIGHLIGHT_CIRCLE_RADIUS) {
+      draggingFrom = highlighted;
+      highlighted = null;
+      dragPoint = DragPointEnum.TOP;
+    } else if (distRight < HIGHLIGHT_CIRCLE_RADIUS) {
+      draggingFrom = highlighted;
+      highlighted = null;
+      dragPoint = DragPointEnum.RIGHT;
+    } else if (distBottom < HIGHLIGHT_CIRCLE_RADIUS) {
+      draggingFrom = highlighted;
+      highlighted = null;
+      dragPoint = DragPointEnum.BOTTOM;
+    } else if (distLeft < HIGHLIGHT_CIRCLE_RADIUS) {
+      draggingFrom = highlighted;
+      highlighted = null;
+      dragPoint = DragPointEnum.LEFT;
+    } else {  // Not clicking on a circle
+      dragging = highlighted;
+      highlighted = null;
+      lastX = mouseX;
+      lastY = mouseY;
+    }
+  }
+}
+
+function mouseOverCanvas($event) {
+  $event.preventDefault();
+  $event.stopPropagation();
+  let x = $event.clientX - canvasOffset.left;
+  let y = $event.clientY - canvasOffset.top;
+
+  if (dragging) {
+    dragSkillAtom(x, y);
+  } else if (draggingFrom) {
+    dragArrow(x, y);
+  } else {
+    handleHighlight(x, y);
+  }
+}
+
+function dragSkillAtom(x, y) {
+  let movementX = x - lastX;
+  let movementY = y - lastY;
+
+  dragging.left += movementX;
+  dragging.right += movementX;
+  dragging.top += movementY;
+  dragging.bottom += movementY;
+
+  lastX = x;
+  lastY = y;
+  draw();
+}
+
+function dragArrow(x, y) {
+  arrowX = x;
+  arrowY = y;
+  console.log(arrowX, arrowY);
+  draw();
+}
+
+function mouseUpOnCanvas($event) {
+  $event.preventDefault();
+  $event.stopPropagation();
+  let x = $event.clientX - canvasOffset.left;
+  let y = $event.clientY - canvasOffset.top;
+
+  dragging = null;
+
+  if (draggingFrom) {
+    let newChild = getSkillAtomUnderCursor(x, y);
+    if (newChild) {
+      draggingFrom.children.push(newChild);
+    }
+    draggingFrom = null;
+  }
+
+  handleHighlight(x, y);
+  draw();
+}
+
+function handleHighlight(x, y) {
+  let oldHighlight = highlighted;
+  highlighted = getSkillAtomUnderCursor(x, y);
+  if (highlighted !== oldHighlight) {
+    draw();
+  }
+}
 
 $.contextMenu({
   selector: '.main-canvas',

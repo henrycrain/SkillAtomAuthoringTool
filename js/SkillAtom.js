@@ -4,4 +4,6 @@ function SkillAtom(skillName, playerInput, stateChange, feedback, knowledgeGrowt
   this.stateChange = stateChange;
   this.feedback = feedback;
   this.knowledgeGrowth = knowledgeGrowth;
+
+  this.children = [];
 }
