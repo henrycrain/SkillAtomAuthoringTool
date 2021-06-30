@@ -50,11 +50,19 @@ function removeFromCanvas(atom) {
   draw();
 }
 
+function getMousePos(clientX, clientY) {
+  let rect = canvas.getBoundingClientRect();
+  return {
+    x: (clientX - rect.left) / (rect.right - rect.left) * canvas.width,
+    y: (clientY - rect.top) / (rect.bottom - rect.top) * canvas.height
+  };
+}
+
 function getSkillAtomUnderCursor(x, y) {
   for (let i = skillAtomsOnCanvas.length - 1; i >= 0; i--) {
     let atom = skillAtomsOnCanvas[i];
     if (x >= atom.left && x <= atom.right  &&
-      y >= atom.top  && y <= atom.bottom ) {
+        y >= atom.top  && y <= atom.bottom ) {
       return atom;
     }
   }
@@ -283,18 +291,21 @@ $canvas.mouseup(mouseUpOnCanvas);
 function clickOnCanvas($event) {
   $event.preventDefault();
   $event.stopPropagation();
-  let mouseX = $event.clientX - canvasOffset.left;
-  let mouseY = $event.clientY - canvasOffset.top;
+  // let mouseX = $event.clientX - canvasOffset.left;
+  // let mouseY = $event.clientY - canvasOffset.top;
+  // let mouseX = $event.clientX;
+  // let mouseY = $event.clientY;
+  let mousePos = getMousePos($event.clientX, $event.clientY);
 
   // The top object is already highlighted, so we don't need to check separately
   if (highlighted) {
     let highlightMidX = (highlighted.left + highlighted.right) / 2;
     let highlightMidY = (highlighted.top + highlighted.bottom) / 2;
 
-    let distTop = Math.hypot(mouseX - highlightMidX, mouseY - highlighted.top);
-    let distRight = Math.hypot(mouseX - highlighted.right, mouseY - highlightMidY);
-    let distBottom = Math.hypot(mouseX - highlightMidX, mouseY - highlighted.bottom);
-    let distLeft = Math.hypot(mouseX - highlighted.left, mouseY - highlightMidY);
+    let distTop = Math.hypot(mousePos.x - highlightMidX, mousePos.y - highlighted.top);
+    let distRight = Math.hypot(mousePos.x - highlighted.right, mousePos.y - highlightMidY);
+    let distBottom = Math.hypot(mousePos.x - highlightMidX, mousePos.y - highlighted.bottom);
+    let distLeft = Math.hypot(mousePos.x - highlighted.left, mousePos.y - highlightMidY);
 
     if (distTop < HIGHLIGHT_CIRCLE_RADIUS) {
       draggingFrom = highlighted;
@@ -315,8 +326,8 @@ function clickOnCanvas($event) {
     } else {  // Not clicking on a circle
       dragging = highlighted;
       highlighted = null;
-      lastX = mouseX;
-      lastY = mouseY;
+      lastX = mousePos.x;
+      lastY = mousePos.y;
     }
   }
 }
@@ -324,15 +335,18 @@ function clickOnCanvas($event) {
 function mouseOverCanvas($event) {
   $event.preventDefault();
   $event.stopPropagation();
-  let x = $event.clientX - canvasOffset.left;
-  let y = $event.clientY - canvasOffset.top;
+  // let x = $event.clientX - canvasOffset.left;
+  // let y = $event.clientY - canvasOffset.top;
+  // let x = $event.clientX;
+  // let y = $event.clientY;
+  let mousePos = getMousePos($event.clientX, $event.clientY);
 
   if (dragging) {
-    dragSkillAtom(x, y);
+    dragSkillAtom(mousePos.x, mousePos.y);
   } else if (draggingFrom) {
-    dragArrow(x, y);
+    dragArrow(mousePos.x, mousePos.y);
   } else {
-    handleHighlight(x, y);
+    handleHighlight(mousePos.x, mousePos.y);
   }
 }
 
@@ -360,20 +374,23 @@ function dragArrow(x, y) {
 function mouseUpOnCanvas($event) {
   $event.preventDefault();
   $event.stopPropagation();
-  let x = $event.clientX - canvasOffset.left;
-  let y = $event.clientY - canvasOffset.top;
+  // let x = $event.clientX - canvasOffset.left;
+  // let y = $event.clientY - canvasOffset.top;
+  // let x = $event.clientX;
+  // let y = $event.clientY;
+  let mousePos = getMousePos($event.clientX, $event.clientY);
 
   dragging = null;
 
   if (draggingFrom) {
-    let newChild = getSkillAtomUnderCursor(x, y);
+    let newChild = getSkillAtomUnderCursor(mousePos.x, mousePos.y);
     if (newChild) {
       draggingFrom.children.push(newChild);
     }
     draggingFrom = null;
   }
 
-  handleHighlight(x, y);
+  handleHighlight(mousePos.x, mousePos.y);
   draw();
 }
 
@@ -388,14 +405,17 @@ function handleHighlight(x, y) {
 $.contextMenu({
   selector: '.main-canvas',
   build: function (element, $event) {
-    let mouseX = $event.clientX - canvasOffset.left;
-    let mouseY = $event.clientY - canvasOffset.top;
+    // let mouseX = $event.clientX - canvasOffset.left;
+    // let mouseY = $event.clientY - canvasOffset.top;
+    // let mouseX = $event.clientX;
+    // let mouseY = $event.clientY;
+    let mousePos = getMousePos($event.clientX, $event.clientY);
 
     let toDelete = null;
     for (let i = skillAtomsOnCanvas.length - 1; i >= 0; i--) {
       let atom = skillAtomsOnCanvas[i];
-      if (mouseX >= atom.left && mouseX <= atom.right &&
-          mouseY >= atom.top && mouseY <= atom.bottom) {
+      if (mousePos.x >= atom.left && mousePos.x <= atom.right &&
+          mousePos.y >= atom.top && mousePos.y <= atom.bottom) {
         toDelete = atom;
         break;
       }
