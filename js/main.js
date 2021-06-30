@@ -50,6 +50,7 @@ function removeFromCanvas(atom) {
   draw();
 }
 
+// Source: https://stackoverflow.com/questions/17130395/real-mouse-position-in-canvas
 function getMousePos(clientX, clientY) {
   let rect = canvas.getBoundingClientRect();
   return {
@@ -106,10 +107,7 @@ function draw() {
 
   for (let atom of skillAtomsOnCanvas) {
     for (let child of atom.children) {
-      ctx.beginPath();
-      ctx.moveTo((atom.left + atom.right) / 2, atom.bottom);
-      ctx.lineTo((child.left + child.right) / 2, child.top);
-      ctx.stroke();
+      drawArrow((atom.left + atom.right) / 2, atom.bottom, (child.left + child.right) / 2, child.top);
     }
   }
 
@@ -135,12 +133,23 @@ function draw() {
         startX = draggingFrom.left;
         startY = midY;
     }
-
-    ctx.beginPath();
-    ctx.moveTo(startX, startY);
-    ctx.lineTo(arrowX, arrowY);
-    ctx.stroke();
+    drawArrow(startX, startY, arrowX, arrowY);
   }
+}
+
+function drawArrow(fromX, fromY, toX, toY) {
+  const HEAD_LENGTH = 10; // length of head in pixels
+  let dx = toX - fromX;
+  let dy = toY - fromY;
+  let angle = Math.atan2(dy, dx);
+
+  ctx.beginPath();
+  ctx.moveTo(fromX, fromY);
+  ctx.lineTo(toX, toY);
+  ctx.lineTo(toX - HEAD_LENGTH * Math.cos(angle - Math.PI / 6), toY - HEAD_LENGTH * Math.sin(angle - Math.PI / 6));
+  ctx.moveTo(toX, toY);
+  ctx.lineTo(toX - HEAD_LENGTH * Math.cos(angle + Math.PI / 6), toY - HEAD_LENGTH * Math.sin(angle + Math.PI / 6));
+  ctx.stroke();
 }
 
 $('#new-atom').click(function () {
@@ -291,10 +300,6 @@ $canvas.mouseup(mouseUpOnCanvas);
 function clickOnCanvas($event) {
   $event.preventDefault();
   $event.stopPropagation();
-  // let mouseX = $event.clientX - canvasOffset.left;
-  // let mouseY = $event.clientY - canvasOffset.top;
-  // let mouseX = $event.clientX;
-  // let mouseY = $event.clientY;
   let mousePos = getMousePos($event.clientX, $event.clientY);
 
   // The top object is already highlighted, so we don't need to check separately
@@ -335,10 +340,6 @@ function clickOnCanvas($event) {
 function mouseOverCanvas($event) {
   $event.preventDefault();
   $event.stopPropagation();
-  // let x = $event.clientX - canvasOffset.left;
-  // let y = $event.clientY - canvasOffset.top;
-  // let x = $event.clientX;
-  // let y = $event.clientY;
   let mousePos = getMousePos($event.clientX, $event.clientY);
 
   if (dragging) {
@@ -374,10 +375,6 @@ function dragArrow(x, y) {
 function mouseUpOnCanvas($event) {
   $event.preventDefault();
   $event.stopPropagation();
-  // let x = $event.clientX - canvasOffset.left;
-  // let y = $event.clientY - canvasOffset.top;
-  // let x = $event.clientX;
-  // let y = $event.clientY;
   let mousePos = getMousePos($event.clientX, $event.clientY);
 
   dragging = null;
@@ -405,10 +402,6 @@ function handleHighlight(x, y) {
 $.contextMenu({
   selector: '.main-canvas',
   build: function (element, $event) {
-    // let mouseX = $event.clientX - canvasOffset.left;
-    // let mouseY = $event.clientY - canvasOffset.top;
-    // let mouseX = $event.clientX;
-    // let mouseY = $event.clientY;
     let mousePos = getMousePos($event.clientX, $event.clientY);
 
     let toDelete = null;
