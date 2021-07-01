@@ -168,11 +168,11 @@ $('#create-atom').click(newAtom);
 $('#create-base').click(newBase);
 
 function newAtom() {
-  let name = $('#atom-name').val();
-  let action = $('#action').val();
-  let simulation = $('#simulation').val();
-  let feedback = $('#feedback').val();
-  let update = $('#update').val();
+  let name = "Name- "+$('#atom-name').val();
+  let action = "Action- "+$('#action').val();
+  let simulation = "Simulation- "+$('#simulation').val();
+  let feedback = "Feedback- "+$('#feedback').val();
+  let update = "Update- "+$('#update').val();
   if (allSkillAtoms.hasOwnProperty(name)) {
     $('.error').text("A skill atom with that name already exists");
     return;
@@ -183,14 +183,14 @@ function newAtom() {
   let textCanvas = $('#text-canvas').get(0);
   let textCtx = textCanvas.getContext('2d');
   textCtx.font = '25px sans-serif';  // Set the font here so the width will be right
-  textCanvas.width = Math.max(...[name, action, simulation, feedback, update].map(text => textCtx.measureText(text).width));
-  textCanvas.height = 110;
+  textCanvas.width = Math.max(...[name, action, simulation, feedback, update].map(text => textCtx.measureText(text).width))+10;
+  textCanvas.height = 115;
   textCtx.font = '25px sans-serif';  // Have to set it again because we changed the width and height
-  textCtx.fillText(name, 0, 25);
-  textCtx.fillText(action, 0, 45);
-  textCtx.fillText(simulation, 0, 65);
-  textCtx.fillText(feedback, 0, 85);
-  textCtx.fillText(update, 0, 105);
+  textCtx.fillText(name, 5, 25);
+  textCtx.fillText(action, 5, 45);
+  textCtx.fillText(simulation, 5, 65);
+  textCtx.fillText(feedback, 5, 85);
+  textCtx.fillText(update, 5, 105);
 
   newSkillAtom.image = new Image();
   newSkillAtom.image.src = textCanvas.toDataURL();
@@ -205,9 +205,9 @@ function newAtom() {
 }
 
 function newBase() {
-  let name = $('#base-name').val();
-  let source = $('#source').val();
-  let knowledge = $('#knowledge').val();
+  let name = "Name- "+$('#base-name').val();
+  let source = "Source- "+$('#source').val();
+  let knowledge = "Knowledge- "+$('#knowledge').val();
   if (allSkillAtoms.hasOwnProperty(name)) {
     $('.error').text("A skill atom with that name already exists");
     return;
@@ -217,13 +217,13 @@ function newBase() {
 
   let textCanvas = $('#text-canvas').get(0);
   let textCtx = textCanvas.getContext('2d');
-  textCtx.font = '25px sans-serif';  // Set the font here so the width will be right
-  textCanvas.width = Math.max(...[name, source, knowledge].map(text => textCtx.measureText(text).width));
-  textCanvas.height = 110;
-  textCtx.font = '25px sans-serif';  // Have to set it again because we changed the width and height
-  textCtx.fillText(name, 0, 25);
-  textCtx.fillText(source, 0, 45);
-  textCtx.fillText(knowledge, 0, 65);
+  textCtx.font = '20px sans-serif';  // Set the font here so the width will be right
+  textCanvas.width = Math.max(...[name, source, knowledge].map(text => textCtx.measureText(text).width))+10;
+  textCanvas.height = 75;
+  textCtx.font = '20px sans-serif';  // Have to set it again because we changed the width and height
+  textCtx.fillText(name, 5, 25);
+  textCtx.fillText(source, 5, 45);
+  textCtx.fillText(knowledge, 5, 65);
 
   newPriorKnowledge.image = new Image();
   newPriorKnowledge.image.src = textCanvas.toDataURL();
