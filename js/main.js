@@ -194,7 +194,7 @@ function newAtom() {
 
   newSkillAtom.image = new Image();
   newSkillAtom.image.src = textCanvas.toDataURL();
-  newSkillAtom.image.id = newSkillAtom.skillName;
+  newSkillAtom.image.id = newSkillAtom.skillName.replace(/\s/g, '');
   newSkillAtom.image.onload = function () {
     addToMenu(newSkillAtom);
     allSkillAtoms[name] = newSkillAtom;
@@ -401,7 +401,7 @@ function handleHighlight(x, y) {
 
 $.contextMenu({
   selector: '.main-canvas',
-  build: function (element, $event) {
+  build: function ($element, $event) {
     let mousePos = getMousePos($event.clientX, $event.clientY);
 
     let toDelete = null;
@@ -423,6 +423,29 @@ $.contextMenu({
           callback: function () {
             removeFromCanvas(toDelete);
             addToMenu(toDelete);
+          }  // end callback
+        }  // end delete
+      },  // end items
+      reposition: false
+    };  // end return
+  }  // end build
+});
+
+$.contextMenu({
+  selector: '#menu img',
+  build: function ($element) {
+    return {
+      items: {
+        'delete': {
+          name: 'Delete',
+          icon: 'delete',
+          callback: function () {
+            let atom = skillAtomsInMenu.find(atom => atom.image === $element.get(0));
+            removeFromMenu(atom);
+            delete allSkillAtoms[atom.skillName];
+            for (let i in allSkillAtoms) {
+              console.log(i);
+            }
           }  // end callback
         }  // end delete
       },  // end items
