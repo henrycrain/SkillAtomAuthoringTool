@@ -227,7 +227,7 @@ function newBase() {
 
   newPriorKnowledge.image = new Image();
   newPriorKnowledge.image.src = textCanvas.toDataURL();
-  newPriorKnowledge.image.id = newPriorKnowledge.skillName;
+  newPriorKnowledge.image.id = newPriorKnowledge.skillName.replace(/\s/g, '');
   newPriorKnowledge.image.onload = function () {
     addToMenu(newPriorKnowledge);
     allSkillAtoms[name] = newPriorKnowledge;
@@ -404,13 +404,26 @@ $.contextMenu({
   build: function ($element, $event) {
     let mousePos = getMousePos($event.clientX, $event.clientY);
 
-    let toDelete = null;
+    let clicked = null;
     for (let i = skillAtomsOnCanvas.length - 1; i >= 0; i--) {
       let atom = skillAtomsOnCanvas[i];
       if (mousePos.x >= atom.left && mousePos.x <= atom.right &&
           mousePos.y >= atom.top && mousePos.y <= atom.bottom) {
-        toDelete = atom;
+        clicked = atom;
         break;
+      }
+    }
+
+    let linksObj = {};
+    if (clicked !== null) {
+      for (let child of clicked.children) {
+        linksObj[child.skillName] = {
+          name: child.skillName,
+          callback: function () {
+            clicked.children = clicked.children.filter(item => item !== child);
+            draw();
+          }
+        };
       }
     }
 
@@ -419,12 +432,17 @@ $.contextMenu({
         'delete': {
           name: 'Remove',
           icon: 'delete',
-          disabled: (toDelete === null),
+          disabled: (clicked === null),
           callback: function () {
-            removeFromCanvas(toDelete);
-            addToMenu(toDelete);
-          }  // end callback
-        }  // end delete
+            removeFromCanvas(clicked);
+            addToMenu(clicked);
+          }
+        },
+        'delete-link': {
+          name: 'Remove Link',
+          disabled: (clicked === null || clicked.children.length === 0),
+          items: linksObj
+        }
       },  // end items
       reposition: false
     };  // end return
