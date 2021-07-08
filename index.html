@@ -69,6 +69,38 @@
     </div>
   </div>
 
+  <div id="edit-atom-modal" class="modal-bg">
+    <div class="modal">
+      <label for="edit-atom-name">Name:</label>
+      <input id="edit-atom-name" type="text"> <br>
+      <label for="edit-action">Action:</label>
+      <input id="edit-action" type="text"> <br>
+      <label for="edit-simulation">Simulation:</label>
+      <input id="edit-simulation" type="text"> <br>
+      <label for="edit-feedback">Feedback:</label>
+      <input id="edit-feedback" type="text"> <br>
+      <label for="edit-update">Update:</label>
+      <input id="edit-update" type="text"> <br>
+      <button id="update-atom" class="create" type="button">Update</button>
+      <button id="cancel-edit-atom" class="cancel" type="button">Cancel</button> <br>
+      <span id="edit-atom-error" class="error"></span>
+    </div>
+  </div>
+
+  <div id="edit-base-modal" class="modal-bg">
+    <div class="modal">
+      <label for="edit-base-name">Name:</label>
+      <input id="edit-base-name" type="text"> <br>
+      <label for="edit-source">Source:</label>
+      <input id="edit-source" type="text"> <br>
+      <label for="edit-knowledge">Knowledge:</label>
+      <input id="edit-knowledge" type="text"> <br>
+      <button id="update-base" class="create" type="button">Update</button>
+      <button id="cancel-edit-base" class="cancel" type="button">Cancel</button> <br>
+      <span id="edit-base-error" class="error"></span>
+    </div>
+  </div>
+
   <canvas class="main-canvas"></canvas>
   <canvas id="text-canvas" class="hidden"></canvas> <!-- Hidden canvas for drawing text -->
 

@@ -168,13 +168,18 @@ $('#create-atom').click(newAtom);
 $('#create-base').click(newBase);
 
 function newAtom() {
-  let name = "Name- "+$('#atom-name').val();
-  let action = "Action- "+$('#action').val();
-  let simulation = "Simulation- "+$('#simulation').val();
-  let feedback = "Feedback- "+$('#feedback').val();
-  let update = "Update- "+$('#update').val();
+  let name = $('#atom-name').val();
+  let nameText = "Name- " + name;
+  let action = $('#action').val();
+  let actionText = "Action- " + action;
+  let simulation = $('#simulation').val();
+  let simulationText = "Simulation- " + simulation;
+  let feedback = $('#feedback').val();
+  let feedbackText = "Feedback- " + feedback;
+  let update = $('#update').val();
+  let updateText = "Update- " + update;
   if (allSkillAtoms.hasOwnProperty(name)) {
-    $('.error').text("A skill atom with that name already exists");
+    $('#atom-error').text("A skill atom with that name already exists");
     return;
   }
 
@@ -183,14 +188,14 @@ function newAtom() {
   let textCanvas = $('#text-canvas').get(0);
   let textCtx = textCanvas.getContext('2d');
   textCtx.font = '25px sans-serif';  // Set the font here so the width will be right
-  textCanvas.width = Math.max(...[name, action, simulation, feedback, update].map(text => textCtx.measureText(text).width))+10;
+  textCanvas.width = Math.max(...[nameText, actionText, simulationText, feedbackText, updateText].map(text => textCtx.measureText(text).width)) + 10;
   textCanvas.height = 115;
   textCtx.font = '25px sans-serif';  // Have to set it again because we changed the width and height
-  textCtx.fillText(name, 5, 25);
-  textCtx.fillText(action, 5, 45);
-  textCtx.fillText(simulation, 5, 65);
-  textCtx.fillText(feedback, 5, 85);
-  textCtx.fillText(update, 5, 105);
+  textCtx.fillText(nameText, 5, 25);
+  textCtx.fillText(actionText, 5, 45);
+  textCtx.fillText(simulationText, 5, 65);
+  textCtx.fillText(feedbackText, 5, 85);
+  textCtx.fillText(updateText, 5, 105);
 
   newSkillAtom.image = new Image();
   newSkillAtom.image.src = textCanvas.toDataURL();
@@ -199,17 +204,21 @@ function newAtom() {
     addToMenu(newSkillAtom);
     allSkillAtoms[name] = newSkillAtom;
     newSkillAtom.image.ondragstart = dragAtomFromMenu;
+    newSkillAtom.image.onload = null;  // We don't want this to fire again when the image is updated
   };
 
   $(this).parents('.modal-bg').css('display', 'none');
 }
 
 function newBase() {
-  let name = "Name- "+$('#base-name').val();
-  let source = "Source- "+$('#source').val();
-  let knowledge = "Knowledge- "+$('#knowledge').val();
+  let name = $('#base-name').val();
+  let nameText = "Name- " + name;
+  let source = $('#source').val();
+  let sourceText = "Source- " + source;
+  let knowledge = $('#knowledge').val();
+  let knowledgeText = "Knowledge- " + knowledge;
   if (allSkillAtoms.hasOwnProperty(name)) {
-    $('.error').text("A skill atom with that name already exists");
+    $('#base-error').text("A skill atom with that name already exists");
     return;
   }
 
@@ -217,13 +226,13 @@ function newBase() {
 
   let textCanvas = $('#text-canvas').get(0);
   let textCtx = textCanvas.getContext('2d');
-  textCtx.font = '20px sans-serif';  // Set the font here so the width will be right
-  textCanvas.width = Math.max(...[name, source, knowledge].map(text => textCtx.measureText(text).width))+10;
+  textCtx.font = '25px sans-serif';  // Set the font here so the width will be right
+  textCanvas.width = Math.max(...[nameText, sourceText, knowledgeText].map(text => textCtx.measureText(text).width))+10;
   textCanvas.height = 75;
-  textCtx.font = '20px sans-serif';  // Have to set it again because we changed the width and height
-  textCtx.fillText(name, 5, 25);
-  textCtx.fillText(source, 5, 45);
-  textCtx.fillText(knowledge, 5, 65);
+  textCtx.font = '25px sans-serif';  // Have to set it again because we changed the width and height
+  textCtx.fillText(nameText, 5, 25);
+  textCtx.fillText(sourceText, 5, 45);
+  textCtx.fillText(knowledgeText, 5, 65);
 
   newPriorKnowledge.image = new Image();
   newPriorKnowledge.image.src = textCanvas.toDataURL();
@@ -232,6 +241,7 @@ function newBase() {
     addToMenu(newPriorKnowledge);
     allSkillAtoms[name] = newPriorKnowledge;
     newPriorKnowledge.image.ondragstart = dragAtomFromMenu;
+    newPriorKnowledge.image.onload = null;  // We don't want this to fire again when the image is updated
   };
 
   $(this).parents('.modal-bg').css('display', 'none');
@@ -267,7 +277,13 @@ function dropAtomOnCanvas($event) {
   $event.preventDefault();
   let xferStr = $event.originalEvent.dataTransfer.getData('application/json');
   let xferObj = JSON.parse(xferStr);
-  let atom = xferObj.atom;
+  let atomObj = xferObj.atom;
+  let atom;
+  if (atomObj.hasOwnProperty('playerInput')) {
+    atom = new SkillAtom(atomObj.skillName, atomObj.playerInput, atomObj.stateChange, atomObj.feedback, atomObj.knowledgeGrowth);
+  } else {
+    atom = new PriorKnowledge(atomObj.skillName, atomObj.skillSource, atomObj.knowledgeGrowth);
+  }
   let offset = xferObj.offset;
   let imgId = $event.originalEvent.dataTransfer.getData('text');
   atom.image = document.getElementById(imgId);
@@ -403,16 +419,7 @@ $.contextMenu({
   selector: '.main-canvas',
   build: function ($element, $event) {
     let mousePos = getMousePos($event.clientX, $event.clientY);
-
-    let clicked = null;
-    for (let i = skillAtomsOnCanvas.length - 1; i >= 0; i--) {
-      let atom = skillAtomsOnCanvas[i];
-      if (mousePos.x >= atom.left && mousePos.x <= atom.right &&
-          mousePos.y >= atom.top && mousePos.y <= atom.bottom) {
-        clicked = atom;
-        break;
-      }
-    }
+    let clicked = getSkillAtomUnderCursor(mousePos.x, mousePos.y);
 
     let linksObj = {};
     if (clicked !== null) {
@@ -429,7 +436,7 @@ $.contextMenu({
 
     return {
       items: {
-        'delete': {
+        delete: {
           name: 'Remove',
           icon: 'delete',
           disabled: (clicked === null),
@@ -438,11 +445,39 @@ $.contextMenu({
             addToMenu(clicked);
           }
         },
-        'delete-link': {
+        deleteLink: {
           name: 'Remove Link',
           disabled: (clicked === null || clicked.children.length === 0),
           items: linksObj
-        }
+        },
+        edit: {
+          name: 'Edit',
+          icon: 'edit',
+          disabled: (clicked === null),
+          callback: function () {
+            if (clicked instanceof SkillAtom) {
+              let editDialog = $('#edit-atom-modal');
+              editDialog.css('display', 'block');
+              editDialog.get(0).target = clicked;  // It's JavaScript, we can do dumb things like this
+
+              $('#edit-atom-name').val(clicked.skillName);
+              $('#edit-action').val(clicked.playerInput);
+              $('#edit-simulation').val(clicked.stateChange);
+              $('#edit-feedback').val(clicked.feedback);
+              $('#edit-update').val(clicked.knowledgeGrowth);
+              $('#edit-atom-error').text("");
+            } else {  // clicked instanceof PriorKnowledge
+              let editDialog = $('#edit-base-modal');
+              editDialog.css('display', 'block');
+              editDialog.get(0).target = clicked;  // It's JavaScript, we can do dumb things like this
+
+              $('#edit-base-name').val(clicked.skillName);
+              $('#edit-source').val(clicked.skillSource);
+              $('#edit-knowledge').val(clicked.knowledgeGrowth);
+              $('#edit-base-error').text("");
+            }
+          }  // end callback
+        }  // end edit
       },  // end items
       reposition: false
     };  // end return
@@ -452,22 +487,130 @@ $.contextMenu({
 $.contextMenu({
   selector: '#menu img',
   build: function ($element) {
+    let clicked = skillAtomsInMenu.find(atom => atom.image === $element.get(0));
+
     return {
       items: {
-        'delete': {
+        delete: {
           name: 'Delete',
           icon: 'delete',
           callback: function () {
-            let atom = skillAtomsInMenu.find(atom => atom.image === $element.get(0));
-            removeFromMenu(atom);
-            delete allSkillAtoms[atom.skillName];
-            for (let i in allSkillAtoms) {
-              console.log(i);
+            removeFromMenu(clicked);
+            delete allSkillAtoms[clicked.skillName];
+          }
+        },
+        edit: {
+          name: 'Edit',
+          icon: 'edit',
+          callback: function () {
+            if (clicked instanceof  SkillAtom) {
+              let editDialog = $('#edit-atom-modal');
+              editDialog.css('display', 'block');
+              editDialog.get(0).target = clicked;  // It's JavaScript, we can do dumb things like this
+
+              $('#edit-atom-name').val(clicked.skillName);
+              $('#edit-action').val(clicked.playerInput);
+              $('#edit-simulation').val(clicked.stateChange);
+              $('#edit-feedback').val(clicked.feedback);
+              $('#edit-update').val(clicked.knowledgeGrowth);
+              $('#edit-atom-error').text("");
+            } else {  // clicked instanceof PriorKnowledge
+              let editDialog = $('#edit-base-modal');
+              editDialog.css('display', 'block');
+              editDialog.get(0).target = clicked;  // It's JavaScript, we can do dumb things like this
+
+              $('#edit-base-name').val(clicked.skillName);
+              $('#edit-source').val(clicked.skillSource);
+              $('#edit-knowledge').val(clicked.knowledgeGrowth);
+              $('#edit-base-error').text("");
             }
           }  // end callback
-        }  // end delete
+        }  // end edit
       },  // end items
       reposition: false
     };  // end return
   }  // end build
 });
+
+$('#update-atom').click(updateAtom);
+$('#update-base').click(updateBase);
+
+function updateAtom() {
+  let atom = $('#edit-atom-modal').get(0).target;
+  let oldName = atom.skillName;
+
+  let name = $('#edit-atom-name').val();
+  let nameText = "Name- " + name;
+  let action = $('#edit-action').val();
+  let actionText = "Action- " + action;
+  let simulation = $('#edit-simulation').val();
+  let simulationText = "Simulation- " + simulation;
+  let feedback = $('#edit-feedback').val();
+  let feedbackText = "Feedback- " + feedback;
+  let update = $('#edit-update').val();
+  let updateText = "Update- " + update;
+
+  atom.skillName = name;
+  atom.playerInput = action;
+  atom.stateChange = simulation;
+  atom.feedback = feedback;
+  atom.knowledgeGrowth = update;
+
+  let textCanvas = $('#text-canvas').get(0);
+  let textCtx = textCanvas.getContext('2d');
+  textCtx.font = '25px sans-serif';  // Set the font here so the width will be right
+  textCanvas.width = Math.max(...[nameText, actionText, simulationText, feedbackText, updateText].map(text => textCtx.measureText(text).width))+10;
+  textCanvas.height = 115;
+  textCtx.font = '25px sans-serif';  // Have to set it again because we changed the width and height
+  textCtx.fillText(nameText, 5, 25);
+  textCtx.fillText(actionText, 5, 45);
+  textCtx.fillText(simulationText, 5, 65);
+  textCtx.fillText(feedbackText, 5, 85);
+  textCtx.fillText(updateText, 5, 105);
+
+  atom.image.src = textCanvas.toDataURL();
+  atom.image.id = atom.skillName.replace(/\s/g, '');
+  delete allSkillAtoms[oldName];
+  allSkillAtoms[name] = atom;
+  if (skillAtomsOnCanvas.includes(atom)) {
+    draw();
+  }
+
+  $(this).parents('.modal-bg').css('display', 'none');
+}
+
+function updateBase() {
+  let atom = $('#edit-base-modal').get(0).target;
+  let oldName = atom.skillName;
+
+  let name = $('#edit-base-name').val();
+  let nameText = "Name- " + name;
+  let source = $('#edit-source').val();
+  let sourceText = "Source- " + source;
+  let knowledge = $('#edit-knowledge').val();
+  let knowledgeText = "Knowledge- " + knowledge;
+
+  atom.skillName = name;
+  atom.skillSource = source;
+  atom.knowledgeGrowth = knowledge;
+
+  let textCanvas = $('#text-canvas').get(0);
+  let textCtx = textCanvas.getContext('2d');
+  textCtx.font = '25px sans-serif';  // Set the font here so the width will be right
+  textCanvas.width = Math.max(...[nameText, sourceText, knowledgeText].map(text => textCtx.measureText(text).width))+10;
+  textCanvas.height = 75;
+  textCtx.font = '25px sans-serif';  // Have to set it again because we changed the width and height
+  textCtx.fillText(nameText, 5, 25);
+  textCtx.fillText(sourceText, 5, 45);
+  textCtx.fillText(knowledgeText, 5, 65);
+
+  atom.image.src = textCanvas.toDataURL();
+  atom.image.id = atom.skillName.replace(/\s/g, '');
+  delete allSkillAtoms[oldName];
+  allSkillAtoms[name] = atom;
+  if (skillAtomsOnCanvas.includes(atom)) {
+    draw();
+  }
+
+  $(this).parents('.modal-bg').css('display', 'none');
+}
