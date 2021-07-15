@@ -154,7 +154,7 @@ function drawArrow(fromX, fromY, toX, toY) {
 
 $('#new-atom').click(function () {
   $('#new-atom-modal').css('display', 'block');
-  $('.modal input').val('');
+  $('#new-atom-modal input').val('');
   $('#atom-error').text("");
 });
 
@@ -384,7 +384,6 @@ function dragSkillAtom(x, y) {
 function dragArrow(x, y) {
   arrowX = x;
   arrowY = y;
-  console.log(arrowX, arrowY);
   draw();
 }
 
