@@ -20,6 +20,14 @@
   <link rel="stylesheet" href="css/main.css">
 
   <meta name="theme-color" content="#fafafa">
+
+  <script src="js/vendor/modernizr-3.11.2.min.js"></script>
+  <script src="js/vendor/jquery-3.6.0.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.7.1/jquery.contextMenu.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.7.1/jquery.contextMenu.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.7.1/jquery.ui.position.js"></script>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://unpkg.com/d3-dag@0.7.0"></script>
 </head>
 
 <body>
@@ -101,20 +109,13 @@
     </div>
   </div>
 
-  <canvas class="main-canvas"></canvas>
+  <svg class="main-canvas"></svg>
   <canvas id="text-canvas" class="hidden"></canvas> <!-- Hidden canvas for drawing text -->
 
-  <script src="js/vendor/modernizr-3.11.2.min.js"></script>
-  <script src="js/vendor/jquery-3.6.0.js"></script>
-  <script src="js/vendor/html2canvas.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.7.1/jquery.contextMenu.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.7.1/jquery.contextMenu.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.7.1/jquery.ui.position.js"></script>
   <script src="js/plugins.js"></script>
   <script src="js/PriorKnowledge.js"></script>
   <script src="js/SkillAtom.js"></script>
-  <script src="js/main.js"></script>
-
+  <script src="js/new-main.js"></script>
 </body>
 
 </html>
