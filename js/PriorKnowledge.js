@@ -3,5 +3,5 @@ function PriorKnowledge(skillName, skillSource, knowledgeGrowth) {
   this.skillSource = skillSource;
   this.knowledgeGrowth = knowledgeGrowth;
 
-  this.children = [];
+  this.parents = [];
 }
