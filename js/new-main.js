@@ -72,21 +72,44 @@ $('.cancel').click(function () {
   $(this).parents('.modal-bg').css('display', 'none');
 });
 
-const menu = [
-  {
-    title: 'Delete',
-    action: d => {
-      let name = d.data.skillName;
-      skillAtomsOnCanvas = skillAtomsOnCanvas.filter(item => (item !== d.data));
-      for (let item of skillAtomsOnCanvas) {
-        item.parents = item.parents.filter(parent => parent !== name);
-      }
-      delete allSkillAtoms[name];
-
-      draw();
+function menu(d) {
+  let parentName = d.data.skillName;
+  let links = [];
+  for (let child of skillAtomsOnCanvas) {
+    if (child.parents.includes(parentName)) {
+      let childName = child.skillName;
+      let link = {
+        title: childName,
+        action: d => {
+          child.parents = child.parents.filter(parent => (parent !== parentName));
+          draw();
+        }
+      };
+      links.push(link);
     }
   }
-];
+
+  return [
+    {
+      title: 'Delete',
+      action: d => {
+        let name = d.data.skillName;
+        skillAtomsOnCanvas = skillAtomsOnCanvas.filter(item => (item !== d.data));
+        for (let item of skillAtomsOnCanvas) {
+          item.parents = item.parents.filter(parent => parent !== name);
+        }
+        delete allSkillAtoms[name];
+
+        draw();
+      }
+    },
+    {
+      title: 'Remove Link',
+      children: links,
+      disabled: links.length === 0
+    }
+  ];
+}
 
 function draw() {
   d3.selectAll("svg > *").remove();  // Reset the SVG
