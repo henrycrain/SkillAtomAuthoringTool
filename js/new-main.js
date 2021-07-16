@@ -38,7 +38,7 @@ function newAtom() {
   let feedback = $('#feedback').val();
   let update = $('#update').val();
   if (allSkillAtoms.hasOwnProperty(name)) {
-    $('#base-error').text("A skill atom with that name already exists");
+    $('#atom-error').text("A skill atom with that name already exists");
     return;
   }
 
@@ -72,43 +72,78 @@ $('.cancel').click(function () {
   $(this).parents('.modal-bg').css('display', 'none');
 });
 
-function menu(d) {
-  let parentName = d.data.skillName;
-  let links = [];
+$('#update-atom').click(updateAtom);
+function updateAtom() {
+  let atom = $('#edit-atom-modal').get(0).target;
+  let oldName = atom.skillName;
+  delete allSkillAtoms[oldName];
+
+  let name = $('#edit-atom-name').val();
+  let action = $('#edit-action').val();
+  let simulation = $('#edit-simulation').val();
+  let feedback = $('#edit-feedback').val();
+  let update = $('#edit-update').val();
+  if (allSkillAtoms.hasOwnProperty(name)) {
+    $('#edit-atom-error').text("A skill atom with that name already exists");
+    return;
+  }
+
+  atom.skillName = name;
+  atom.playerInput = action;
+  atom.stateChange = simulation;
+  atom.feedback = feedback;
+  atom.knowledgeGrowth = update;
+  allSkillAtoms[name] = atom;
+
   for (let child of skillAtomsOnCanvas) {
-    if (child.parents.includes(parentName)) {
-      let childName = child.skillName;
-      let link = {
-        title: childName,
-        action: d => {
-          child.parents = child.parents.filter(parent => (parent !== parentName));
-          draw();
-        }
-      };
-      links.push(link);
+    if (child.parents.includes(oldName)) {
+      child.parents = child.parents.filter(parent => (parent !== oldName));
+      child.parents.push(name);
     }
   }
 
-  return [
-    {
-      title: 'Delete',
-      action: d => {
-        let name = d.data.skillName;
-        skillAtomsOnCanvas = skillAtomsOnCanvas.filter(item => (item !== d.data));
-        for (let item of skillAtomsOnCanvas) {
-          item.parents = item.parents.filter(parent => parent !== name);
-        }
-        delete allSkillAtoms[name];
+  let oldId = oldName.replace(/\s/g, '');
+  let newId = name.replace(/\s/g, '');
+  svg.select(`#${oldId}`)
+     .text(name)
+     .attr('id', newId);
 
-        draw();
-      }
-    },
-    {
-      title: 'Remove Link',
-      children: links,
-      disabled: links.length === 0
+  $(this).parents('.modal-bg').css('display', 'none');
+}
+
+$('#update-base').click(updateBase);
+function updateBase() {
+  let atom = $('#edit-base-modal').get(0).target;
+  let oldName = atom.skillName;
+  delete allSkillAtoms[oldName];
+
+  let name = $('#edit-base-name').val();
+  let source = $('#edit-source').val();
+  let knowledge = $('#edit-knowledge').val();
+  if (allSkillAtoms.hasOwnProperty(name)) {
+    $('#edit-base-error').text("A skill atom with that name already exists");
+    return;
+  }
+
+  atom.skillName = name;
+  atom.skilSource = source;
+  atom.knowledgeGrowth = knowledge;
+  allSkillAtoms[name] = atom;
+
+  for (let child of skillAtomsOnCanvas) {
+    if (child.parents.includes(oldName)) {
+      child.parents = child.parents.filter(parent => (parent !== oldName));
+      child.parents.push(name);
     }
-  ];
+  }
+
+  let oldId = oldName.replace(/\s/g, '');
+  let newId = name.replace(/\s/g, '');
+  svg.select(`#${oldId}`)
+     .text(name)
+     .attr('id', newId);
+
+  $(this).parents('.modal-bg').css('display', 'none');
 }
 
 function draw() {
@@ -147,6 +182,7 @@ function draw() {
   // TODO draw boxes
   nodes.append('text')  // Add text
        .text(node => node.data.skillName)  // Just use skillName as a placeholder
+       .attr('id', node => node.data.skillName.replace(/\s/g, ''))
        .attr('text-anchor', 'middle')  // Center text in node
        .attr('alignment-baseline', 'middle');
 }
@@ -160,4 +196,74 @@ function connect(event, d) {
     draw();
     connectMode = false;
   }
+}
+
+function menu(d) {
+  let del = {
+    title: 'Delete',
+    action: d => {
+      let name = d.data.skillName;
+      skillAtomsOnCanvas = skillAtomsOnCanvas.filter(item => (item !== d.data));
+      for (let item of skillAtomsOnCanvas) {
+        item.parents = item.parents.filter(parent => parent !== name);
+      }
+      delete allSkillAtoms[name];
+
+      draw();
+    }
+  };
+
+  let parentName = d.data.skillName;
+  let links = [];
+  for (let child of skillAtomsOnCanvas) {
+    if (child.parents.includes(parentName)) {
+      let childName = child.skillName;
+      let link = {
+        title: childName,
+        action: d => {
+          child.parents = child.parents.filter(parent => (parent !== parentName));
+          draw();
+        }
+      };
+      links.push(link);
+    }
+  }
+
+  let edit = {
+    title: 'Edit',
+    action: d => {
+      let node = d.data;
+      if (node instanceof SkillAtom) {
+        let editDialog = $('#edit-atom-modal');
+        editDialog.css('display', 'block');
+        editDialog.get(0).target = node;  // It's JavaScript, we can do dumb things like this
+
+        $('#edit-atom-name').val(node.skillName);
+        $('#edit-action').val(node.playerInput);
+        $('#edit-simulation').val(node.stateChange);
+        $('#edit-feedback').val(node.feedback);
+        $('#edit-update').val(node.knowledgeGrowth);
+        $('#edit-atom-error').text("");
+      } else {  // node instanceof PriorKnowledge
+        let editDialog = $('#edit-base-modal');
+        editDialog.css('display', 'block');
+        editDialog.get(0).target = node;  // It's JavaScript, we can do dumb things like this
+
+        $('#edit-base-name').val(node.skillName);
+        $('#edit-source').val(node.skillSource);
+        $('#edit-knowledge').val(node.knowledgeGrowth);
+        $('#edit-base-error').text("");
+      }
+    }
+  };
+
+  return [
+    del,
+    {
+      title: 'Remove Link',
+      children: links,
+      disabled: links.length === 0
+    },
+    edit
+  ];
 }
